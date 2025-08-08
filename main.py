@@ -9,9 +9,6 @@ Before running this agent:
 1. Make sure you have your OpenAI API key in a .env file
 2. Run build_rag_data.py to build the RAG database
 """
-import multiprocessing as mp
-mp.set_start_method("spawn", force=True)
-
 from livekit import rtc
 import logging
 import pickle
@@ -157,11 +154,7 @@ class RAGEnrichedAgent(Agent):
         except Exception as e:
             logger.error(f"Failed to load RAG database: {e}")
 
-    #######
-            
-    
 
-    ####
     @function_tool
     async def livekit_docs_search(self, context: RunContext, query: str):
         """Lookup information in the LiveKit docs database. Will not return results already returned in previous lookups."""
@@ -217,13 +210,6 @@ class RAGEnrichedAgent(Agent):
                 f"Results for query: {query}, full context: {escaped_context}"
             )
 
-
-            # Combine all context parts with clear separation
-            #full_context = "\n\n".join(context_parts)
-            #logger.info(
-            #    f"Results for query: {query}, full context: {full_context.replace('\n', '\\n')}"
-            #)
-
             return escaped_context
         except Exception as e:
             return "Could not find any relevant information for that query."
@@ -237,19 +223,7 @@ class RAGEnrichedAgent(Agent):
 
 async def entrypoint(ctx: JobContext):
     """Main entrypoint for the agent."""
-    ''''
-    session = AgentSession(
-        stt=deepgram.STT(),
-        llm=openai.LLM(model="gpt-4o"),
-        tts=openai.TTS(
-            instructions="You are a helpful assistant with a pleasant voice.",
-            voice="ash",
-        ),
-        turn_detection=EnglishModel(),
-        vad=silero.VAD.load(),
-    )
-'''
-
+   
     print("Initializing Deepgram STT")
     stt = deepgram.STT()
 
@@ -277,7 +251,8 @@ async def entrypoint(ctx: JobContext):
         vad=vad,
     )
     print("🔄 Starting agent session...")
-    #####
+
+
     room_io = RoomIO(session, room=ctx.room)
     await room_io.start()
 
@@ -288,7 +263,7 @@ async def entrypoint(ctx: JobContext):
             print(f"🔁 Switching to active speaker: {active}")
             room_io.set_participant(active)
             session.input.set_audio_enabled(True)
-    ###
+
     await session.start(
         agent=RAGEnrichedAgent(),
         room=ctx.room,
@@ -301,7 +276,6 @@ async def entrypoint(ctx: JobContext):
 
 
 
-
 if __name__ == "__main__":
     cli.run_app(
     WorkerOptions(
@@ -309,4 +283,3 @@ if __name__ == "__main__":
         initialize_process_timeout=60.0  # ✅ Set timeout inside WorkerOptions
     )
 )
-    #cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint), initialize_process_timeout=30.0)
